@@ -1,0 +1,275 @@
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --text: #16191d;
+  --muted: #69717c;
+  --border: #dde1e6;
+  --accent: #2f81f7;
+  --ok: #1a7f37;
+  --warn: #9a6700;
+  --err: #cf222e;
+  --row-alt: #f2f4f6;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", "Liberation Mono", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111418;
+    --surface: #181c21;
+    --text: #e4e8ec;
+    --muted: #8b949e;
+    --border: #2d333b;
+    --accent: #4c9aff;
+    --ok: #3fb950;
+    --warn: #d29922;
+    --err: #f85149;
+    --row-alt: #1d2228;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  -webkit-text-size-adjust: 100%;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+/* ---- top bar ---- */
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 8px max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left));
+  padding-top: max(8px, env(safe-area-inset-top));
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.bar h1 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.status {
+  font-size: 12px;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.status::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex: none;
+}
+
+.status[data-state="ok"]::before { background: var(--ok); }
+.status[data-state="waiting"]::before { background: var(--warn); }
+.status[data-state="paused"]::before { background: var(--muted); }
+.status[data-state="error"] { color: var(--err); }
+.status[data-state="error"]::before { background: var(--err); }
+
+.actions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.actions button {
+  min-height: 34px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.actions button[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.actions button:active { transform: translateY(1px); }
+
+/* ---- layout ----
+   Narrow screens: one column and the whole page scrolls, with the bar pinned.
+   Wide screens: map | panel, filling the viewport, and the log scrolls on its own. */
+
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.map {
+  height: 45vh;
+  height: 45svh;
+  min-height: 220px;
+  border-bottom: 1px solid var(--border);
+}
+
+.log { overflow-x: auto; }
+
+@media (min-width: 900px) {
+  body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+  }
+  .layout {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+  }
+  .map {
+    flex: 1;
+    height: auto;
+    border-bottom: 0;
+    border-right: 1px solid var(--border);
+  }
+  .panel {
+    flex: none;
+    width: 600px;
+    display: flex;
+    flex-direction: column;
+  }
+  .log {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+  }
+}
+
+/* ---- current fix readout ---- */
+
+.readout {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+@media (min-width: 520px) {
+  .readout { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+.cell {
+  background: var(--surface);
+  padding: 6px 10px 8px;
+  min-width: 0;
+}
+
+.cell.wide { grid-column: 1 / -1; }
+
+.cell dt {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cell dd {
+  margin: 2px 0 0;
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cell dd .sub {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.cell.wide dd { font-size: 18px; }
+
+.copy {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  font-size: inherit;
+}
+
+.copy:hover { color: var(--accent); }
+.copy.copied::after {
+  content: "  copied";
+  color: var(--ok);
+  font-size: 12px;
+}
+
+/* ---- fix log ---- */
+
+.log {
+  background: var(--surface);
+}
+
+.log table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.log th,
+.log td {
+  padding: 3px 8px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.log th:first-child,
+.log td:first-child { text-align: left; }
+
+.log thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  color: var(--muted);
+  font-weight: 400;
+  border-bottom: 1px solid var(--border);
+}
+
+.log tbody tr:nth-child(even) { background: var(--row-alt); }
+.log td.null { color: var(--muted); }
+
+.empty {
+  margin: 16px 12px;
+  color: var(--muted);
+}
+
+/* ---- leaflet tweaks ---- */
+
+.leaflet-container {
+  background: var(--bg);
+  font-family: var(--mono);
+}
